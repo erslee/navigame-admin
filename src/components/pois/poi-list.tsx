@@ -81,11 +81,35 @@ export function POIList() {
     loadPOIs();
   };
 
+  const getStatusBadge = (status: string) => {
+    const colors = {
+      NEW: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300',
+      PUBLISHED: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300',
+      DISABLED: 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300',
+    };
+
+    return (
+      <span className={`px-2 py-1 rounded-full text-xs font-medium ${colors[status as keyof typeof colors] || ''}`}>
+        {status}
+      </span>
+    );
+  };
+
   const columns: Column<POI>[] = [
     { key: 'name', label: 'Name' },
     { key: 'categoryName', label: 'Category' },
     { key: 'cityName', label: 'City' },
     { key: 'address', label: 'Address', render: (poi) => poi.address.substring(0, 50) + (poi.address.length > 50 ? '...' : '') },
+    {
+      key: 'status',
+      label: 'Status',
+      render: (poi) => getStatusBadge(poi.status),
+    },
+    {
+      key: 'geolocation',
+      label: 'Coordinates',
+      render: (poi) => `${poi.geolocation.latitude.toFixed(4)}, ${poi.geolocation.longitude.toFixed(4)}`,
+    },
     {
       key: 'dynamicFields',
       label: 'Extra Fields',

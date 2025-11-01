@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Country, City, Category, CreatePOIInput } from '@/models';
+import { Country, City, Category, CreatePOIInput, POIStatus } from '@/models';
 import { countryService } from '@/services/country-service';
 import { cityService } from '@/services/city-service';
 import { categoryService } from '@/services/category-service';
@@ -23,7 +23,6 @@ export function AIPOIGenerator() {
     countryId: '',
     cityId: '',
     categoryId: '',
-    count: 5,
     dynamicFieldsInput: '',
   });
 
@@ -67,9 +66,12 @@ export function AIPOIGenerator() {
       setCities(citiesData);
       setCategories(categoriesData);
 
-      // Set default model if available
-      if (modelsData.length > 0) {
-        setFormData((prev) => ({ ...prev, model: modelsData[0].id }));
+      // Set default model to Gemini Flash if available, otherwise first model
+      const geminiFlash = modelsData.find((m) => m.id.includes('gemini-flash'));
+      const defaultModel = geminiFlash || modelsData[0];
+
+      if (defaultModel) {
+        setFormData((prev) => ({ ...prev, model: defaultModel.id }));
       }
     } catch (error) {
       console.error('Error loading data:', error);
@@ -93,10 +95,6 @@ export function AIPOIGenerator() {
     }
     if (!formData.countryId || !formData.cityId || !formData.categoryId) {
       setError('Please select country, city, and category');
-      return;
-    }
-    if (formData.count < 1 || formData.count > 50) {
-      setError('Number of POIs must be between 1 and 50');
       return;
     }
 
@@ -124,7 +122,6 @@ export function AIPOIGenerator() {
         country: selectedCountry.name,
         city: selectedCity.name,
         category: selectedCategory.name,
-        count: formData.count,
         dynamicFields,
       });
 
@@ -156,6 +153,8 @@ export function AIPOIGenerator() {
         const poiData: CreatePOIInput = {
           name: poi.name,
           address: poi.address,
+          geolocation: poi.geolocation,
+          status: POIStatus.NEW,
           cityId: formData.cityId,
           cityName: selectedCity.name,
           categoryId: formData.categoryId,
@@ -266,16 +265,6 @@ export function AIPOIGenerator() {
           </div>
 
           <Input
-            label="Number of POIs to Generate"
-            type="number"
-            min="1"
-            max="50"
-            value={formData.count}
-            onChange={(e) => setFormData({ ...formData, count: parseInt(e.target.value) || 1 })}
-            required
-          />
-
-          <Input
             label="Dynamic Fields (comma-separated)"
             value={formData.dynamicFieldsInput}
             onChange={(e) => setFormData({ ...formData, dynamicFieldsInput: e.target.value })}
@@ -325,15 +314,25 @@ export function AIPOIGenerator() {
                 <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
                   <strong>Address:</strong> {poi.address}
                 </p>
-                {Object.keys(poi.dynamicFields).length > 0 && (
+                {poi.dynamicFields.description && (
+                  <p className="text-sm text-gray-700 dark:text-gray-300 mb-2 italic">
+                    {poi.dynamicFields.description}
+                  </p>
+                )}
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+                  <strong>Geolocation:</strong> {poi.geolocation.latitude.toFixed(6)}, {poi.geolocation.longitude.toFixed(6)}
+                </p>
+                {Object.keys(poi.dynamicFields).length > 1 && (
                   <div className="text-sm text-gray-600 dark:text-gray-400">
-                    <strong>Fields:</strong>
+                    <strong>Additional Fields:</strong>
                     <ul className="ml-4 mt-1">
-                      {Object.entries(poi.dynamicFields).map(([key, value]) => (
-                        <li key={key}>
-                          {key}: {value}
-                        </li>
-                      ))}
+                      {Object.entries(poi.dynamicFields)
+                        .filter(([key]) => key !== 'description')
+                        .map(([key, value]) => (
+                          <li key={key}>
+                            {key}: {value}
+                          </li>
+                        ))}
                     </ul>
                   </div>
                 )}

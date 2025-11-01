@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { POI, CreatePOIInput, UpdatePOIInput, Category, City } from '@/models';
+import { POI, CreatePOIInput, UpdatePOIInput, Category, City, POIStatus } from '@/models';
 import { categoryService } from '@/services/category-service';
 import { cityService } from '@/services/city-service';
 import { Input, Select, Textarea } from '@/components/common/form-input';
@@ -19,6 +19,9 @@ export function POIForm({ poi, onSubmit, onCancel }: POIFormProps) {
     categoryId: poi?.categoryId || '',
     cityId: poi?.cityId || '',
     address: poi?.address || '',
+    latitude: poi?.geolocation?.latitude?.toString() || '',
+    longitude: poi?.geolocation?.longitude?.toString() || '',
+    status: poi?.status || POIStatus.NEW,
     dynamicFields: poi?.dynamicFields || {},
   });
   const [categories, setCategories] = useState<Category[]>([]);
@@ -65,6 +68,28 @@ export function POIForm({ poi, onSubmit, onCancel }: POIFormProps) {
       newErrors.address = 'Address is required';
     }
 
+    if (!formData.latitude || isNaN(parseFloat(formData.latitude))) {
+      newErrors.latitude = 'Valid latitude is required';
+    } else {
+      const lat = parseFloat(formData.latitude);
+      if (lat < -90 || lat > 90) {
+        newErrors.latitude = 'Latitude must be between -90 and 90';
+      }
+    }
+
+    if (!formData.longitude || isNaN(parseFloat(formData.longitude))) {
+      newErrors.longitude = 'Valid longitude is required';
+    } else {
+      const lng = parseFloat(formData.longitude);
+      if (lng < -180 || lng > 180) {
+        newErrors.longitude = 'Longitude must be between -180 and 180';
+      }
+    }
+
+    if (!formData.status) {
+      newErrors.status = 'Status is required';
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -91,6 +116,11 @@ export function POIForm({ poi, onSubmit, onCancel }: POIFormProps) {
         cityId: formData.cityId,
         cityName: selectedCity.name,
         address: formData.address,
+        geolocation: {
+          latitude: parseFloat(formData.latitude),
+          longitude: parseFloat(formData.longitude),
+        },
+        status: formData.status,
         dynamicFields: formData.dynamicFields,
       });
     } catch (error) {
@@ -114,6 +144,12 @@ export function POIForm({ poi, onSubmit, onCancel }: POIFormProps) {
     value: city.id,
     label: `${city.name}, ${city.countryName}`,
   }));
+
+  const statusOptions = [
+    { value: POIStatus.NEW, label: 'New' },
+    { value: POIStatus.PUBLISHED, label: 'Published' },
+    { value: POIStatus.DISABLED, label: 'Disabled' },
+  ];
 
   return (
     <form onSubmit={handleSubmit}>
@@ -151,6 +187,39 @@ export function POIForm({ poi, onSubmit, onCancel }: POIFormProps) {
         error={errors.address}
         placeholder="Full address of the POI"
         rows={2}
+        required
+      />
+
+      <div className="grid grid-cols-2 gap-4">
+        <Input
+          label="Latitude"
+          type="number"
+          step="any"
+          value={formData.latitude}
+          onChange={(e) => setFormData({ ...formData, latitude: e.target.value })}
+          error={errors.latitude}
+          placeholder="e.g., 48.8566"
+          required
+        />
+
+        <Input
+          label="Longitude"
+          type="number"
+          step="any"
+          value={formData.longitude}
+          onChange={(e) => setFormData({ ...formData, longitude: e.target.value })}
+          error={errors.longitude}
+          placeholder="e.g., 2.3522"
+          required
+        />
+      </div>
+
+      <Select
+        label="Status"
+        value={formData.status}
+        onChange={(e) => setFormData({ ...formData, status: e.target.value as POIStatus })}
+        options={statusOptions}
+        error={errors.status}
         required
       />
 

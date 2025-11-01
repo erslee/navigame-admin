@@ -1,5 +1,16 @@
 import { Timestamp } from 'firebase/firestore';
 
+export enum POIStatus {
+  NEW = 'NEW',
+  PUBLISHED = 'PUBLISHED',
+  DISABLED = 'DISABLED',
+}
+
+export interface Geolocation {
+  latitude: number;
+  longitude: number;
+}
+
 export interface POI {
   id: string;
   name: string;
@@ -8,6 +19,8 @@ export interface POI {
   cityId: string;
   cityName: string; // Denormalized for performance
   address: string; // Required field
+  geolocation: Geolocation; // Required field
+  status: POIStatus; // NEW, PUBLISHED, or DISABLED
   dynamicFields: Record<string, string>; // Key-value pairs for additional fields
   createdAt: Timestamp;
   updatedAt: Timestamp;
@@ -20,6 +33,8 @@ export interface CreatePOIInput {
   cityId: string;
   cityName: string;
   address: string;
+  geolocation: Geolocation;
+  status: POIStatus;
   dynamicFields: Record<string, string>;
 }
 
@@ -30,5 +45,7 @@ export interface UpdatePOIInput {
   cityId?: string;
   cityName?: string;
   address?: string;
+  geolocation?: Geolocation;
+  status?: POIStatus;
   dynamicFields?: Record<string, string>;
 }

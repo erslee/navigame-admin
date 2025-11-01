@@ -24,6 +24,24 @@ export class POIService {
       throw new Error('Address is required for POI');
     }
 
+    // Validate geolocation
+    if (!data.geolocation || typeof data.geolocation.latitude !== 'number' || typeof data.geolocation.longitude !== 'number') {
+      throw new Error('Valid geolocation with latitude and longitude is required');
+    }
+
+    if (data.geolocation.latitude < -90 || data.geolocation.latitude > 90) {
+      throw new Error('Latitude must be between -90 and 90');
+    }
+
+    if (data.geolocation.longitude < -180 || data.geolocation.longitude > 180) {
+      throw new Error('Longitude must be between -180 and 180');
+    }
+
+    // Validate status
+    if (!data.status) {
+      throw new Error('Status is required for POI');
+    }
+
     return poiRepository.createPOI(data);
   }
 
@@ -31,6 +49,21 @@ export class POIService {
     // Validate address if it's being updated
     if (data.address !== undefined && data.address.trim() === '') {
       throw new Error('Address cannot be empty');
+    }
+
+    // Validate geolocation if it's being updated
+    if (data.geolocation !== undefined) {
+      if (typeof data.geolocation.latitude !== 'number' || typeof data.geolocation.longitude !== 'number') {
+        throw new Error('Valid geolocation with latitude and longitude is required');
+      }
+
+      if (data.geolocation.latitude < -90 || data.geolocation.latitude > 90) {
+        throw new Error('Latitude must be between -90 and 90');
+      }
+
+      if (data.geolocation.longitude < -180 || data.geolocation.longitude > 180) {
+        throw new Error('Longitude must be between -180 and 180');
+      }
     }
 
     return poiRepository.updatePOI(id, data);
