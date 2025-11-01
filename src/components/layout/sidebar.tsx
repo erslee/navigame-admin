@@ -9,6 +9,7 @@ const navigation = [
   { name: 'Cities', href: '/cities', icon: '🏙️' },
   { name: 'Categories', href: '/categories', icon: '📂' },
   { name: 'POIs', href: '/pois', icon: '📍' },
+  { name: 'AI Generate', href: '/ai-generate', icon: '🤖' },
   { name: 'Allowed Emails', href: '/admin/allowed-emails', icon: '✉️' },
 ];
 

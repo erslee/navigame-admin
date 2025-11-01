@@ -5,6 +5,12 @@ Admin dashboard for managing Navigame data with Firebase authentication and Fire
 ## Features
 
 - **Google OAuth Authentication** with email whitelist
+- **AI-Powered POI Generation** using OpenRouter ([detailed guide](AI_GENERATION.md)):
+  - Select from multiple AI models (Claude, GPT-4, Gemini, Llama)
+  - Generate POIs based on custom prompts
+  - Specify country, city, and category
+  - Define custom dynamic fields
+  - Preview and selectively import generated POIs
 - **CRUD Operations** for:
   - Countries (name, ISO code)
   - Cities (name, country reference)
@@ -23,6 +29,7 @@ Admin dashboard for managing Navigame data with Firebase authentication and Fire
 - **Next.js 16** (App Router)
 - **TypeScript** with strict mode
 - **Firebase** (Authentication & Firestore)
+- **OpenRouter** (AI model integration)
 - **Tailwind CSS v4**
 - **React Hook Form**
 - **Zod** for validation
@@ -90,7 +97,15 @@ npm install
    - Click the web icon (</>)
    - Copy the config values
 
-### 3. Set Environment Variables
+### 3. Configure OpenRouter (for AI features)
+
+1. Go to [OpenRouter](https://openrouter.ai/)
+2. Sign up or log in
+3. Navigate to **Keys** in your account settings
+4. Click **Create Key**
+5. Copy the API key (starts with `sk-or-v1-`)
+
+### 4. Set Environment Variables
 
 Create a `.env.local` file in the root directory:
 
@@ -102,6 +117,9 @@ NEXT_PUBLIC_FIREBASE_PROJECT_ID=your-project-id
 NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=your-project-id.appspot.com
 NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your-sender-id
 NEXT_PUBLIC_FIREBASE_APP_ID=your-app-id
+
+# OpenRouter Configuration (for AI POI generation)
+NEXT_PUBLIC_OPENROUTER_API_KEY=sk-or-v1-your-openrouter-api-key
 ```
 
 ### 4. Set Up Firebase Service Account (for Console Commands)
@@ -219,6 +237,21 @@ npm run remove-email your-email@example.com
   - Dynamic fields (optional key-value pairs)
 - Add custom fields by entering field name and value, then click "Add"
 - Remove fields by clicking "Remove" next to the field
+
+#### AI POI Generation
+- Navigate to "AI Generate" in the sidebar
+- Select an AI model from the dropdown (e.g., Claude, GPT-4, Gemini, Llama)
+- Enter a detailed prompt describing the POIs you want to generate
+  - Example: "Popular tourist attractions with historical significance"
+  - Example: "Family-friendly restaurants with outdoor seating"
+- Select Country, City, and Category
+- Specify number of POIs to generate (1-50)
+- (Optional) Add comma-separated dynamic fields
+  - Example: "phone, website, opening_hours, price_range"
+- Click "Generate POIs"
+- Review the generated POIs in the preview
+- Remove any unwanted POIs by clicking "Remove"
+- Click "Import All" to add them to your database
 
 ### Managing Access
 
@@ -354,6 +387,13 @@ npm run remove-email  # Remove an email from allowed list
 - Verify all environment variables in `.env.local` are correct
 - Make sure Google Auth is enabled in Firebase Console
 - Check that Firestore database is created
+
+### AI Generation not working
+- Make sure `NEXT_PUBLIC_OPENROUTER_API_KEY` is set in `.env.local`
+- Verify your OpenRouter API key is valid
+- Check that you have credits in your OpenRouter account
+- Try a different AI model if one fails
+- Make sure your prompt is clear and specific
 
 ## License
 

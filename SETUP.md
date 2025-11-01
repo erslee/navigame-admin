@@ -58,7 +58,21 @@ npm install
 6. Click **Register app**
 7. Copy the `firebaseConfig` object values
 
-## Step 6: Configure Environment Variables
+## Step 6: Set Up OpenRouter (for AI Features)
+
+1. Go to [OpenRouter](https://openrouter.ai/)
+2. Click **Sign Up** or **Log In**
+3. Once logged in, navigate to **Keys** in the left sidebar
+4. Click **Create Key**
+5. Give your key a name (e.g., "Navigame Admin")
+6. Click **Create**
+7. Copy the API key (starts with `sk-or-v1-`)
+8. (Optional) Add credits to your account:
+   - Click **Credits** in sidebar
+   - Click **Add Credits**
+   - Add $5-10 for testing (enough for thousands of POI generations)
+
+## Step 7: Configure Environment Variables
 
 1. In your project root, create `.env.local` file:
 
@@ -66,7 +80,7 @@ npm install
 touch .env.local
 ```
 
-2. Copy the template from `.env.local.example` or add these variables:
+2. Copy the template from `.env.example` or add these variables:
 
 ```env
 # Firebase Configuration
@@ -76,9 +90,12 @@ NEXT_PUBLIC_FIREBASE_PROJECT_ID=your-project-id
 NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=your-project-id.appspot.com
 NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=123456789012
 NEXT_PUBLIC_FIREBASE_APP_ID=1:123456789012:web:abcdef123456
+
+# OpenRouter Configuration (for AI POI generation)
+NEXT_PUBLIC_OPENROUTER_API_KEY=sk-or-v1-your-actual-api-key-from-step-6
 ```
 
-3. Replace the values with your actual Firebase config values from Step 5
+3. Replace the values with your actual Firebase config values from Step 5 and OpenRouter key from Step 6
 
 ## Step 7: Get Firebase Service Account (for CLI commands)
 
