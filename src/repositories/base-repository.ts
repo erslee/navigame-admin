@@ -28,6 +28,11 @@ export interface SearchParams {
   value: string;
 }
 
+export interface FilterParams {
+  field: string;
+  value: string;
+}
+
 export interface PaginatedResult<T> {
   items: T[];
   lastDoc?: DocumentSnapshot<DocumentData>;
@@ -58,9 +63,17 @@ export class BaseRepository<T extends { id: string }> {
 
   async getPaginated(
     pagination: PaginationParams,
-    searchParams?: SearchParams
+    searchParams?: SearchParams,
+    filterParams?: FilterParams[]
   ): Promise<PaginatedResult<T>> {
     const constraints: QueryConstraint[] = [];
+
+    // Add filter constraints if provided
+    if (filterParams && filterParams.length > 0) {
+      filterParams.forEach((filter) => {
+        constraints.push(where(filter.field, '==', filter.value));
+      });
+    }
 
     // Add search constraint if provided
     if (searchParams) {
@@ -122,5 +135,10 @@ export class BaseRepository<T extends { id: string }> {
   async bulkDelete(ids: string[]): Promise<void> {
     const deletePromises = ids.map((id) => this.delete(id));
     await Promise.all(deletePromises);
+  }
+
+  async bulkUpdate(ids: string[], data: Partial<Omit<T, 'id' | 'createdAt'>>): Promise<void> {
+    const updatePromises = ids.map((id) => this.update(id, data));
+    await Promise.all(updatePromises);
   }
 }

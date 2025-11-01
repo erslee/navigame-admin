@@ -9,6 +9,12 @@ export interface Column<T> {
   render?: (item: T) => React.ReactNode;
 }
 
+export interface BulkAction {
+  label: string;
+  onClick: (ids: string[]) => void;
+  className?: string;
+}
+
 interface DataTableProps<T extends { id: string }> {
   data: T[];
   columns: Column<T>[];
@@ -16,6 +22,7 @@ interface DataTableProps<T extends { id: string }> {
   onEdit?: (item: T) => void;
   onDelete?: (id: string) => void;
   onBulkDelete?: (ids: string[]) => void;
+  bulkActions?: BulkAction[];
   searchPlaceholder?: string;
   onSearch?: (query: string) => void;
   onLoadMore?: () => void;
@@ -30,6 +37,7 @@ export function DataTable<T extends { id: string }>({
   onEdit,
   onDelete,
   onBulkDelete,
+  bulkActions,
   searchPlaceholder = 'Search...',
   onSearch,
   onLoadMore,
@@ -86,13 +94,29 @@ export function DataTable<T extends { id: string }>({
           />
         )}
 
-        {onBulkDelete && selectedIds.size > 0 && (
-          <button
-            onClick={handleBulkDelete}
-            className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500"
-          >
-            Delete Selected ({selectedIds.size})
-          </button>
+        {selectedIds.size > 0 && (
+          <div className="flex gap-2">
+            {bulkActions?.map((action, index) => (
+              <button
+                key={index}
+                onClick={() => {
+                  action.onClick(Array.from(selectedIds));
+                  setSelectedIds(new Set());
+                }}
+                className={action.className || 'px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500'}
+              >
+                {action.label} ({selectedIds.size})
+              </button>
+            ))}
+            {onBulkDelete && (
+              <button
+                onClick={handleBulkDelete}
+                className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500"
+              >
+                Delete Selected ({selectedIds.size})
+              </button>
+            )}
+          </div>
         )}
       </div>
 
@@ -104,7 +128,7 @@ export function DataTable<T extends { id: string }>({
             <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
               <thead className="bg-gray-50 dark:bg-gray-800">
                 <tr>
-                  {onBulkDelete && (
+                  {(onBulkDelete || bulkActions) && (
                     <th className="px-6 py-3 text-left">
                       <input
                         type="checkbox"
@@ -133,7 +157,7 @@ export function DataTable<T extends { id: string }>({
                 {data.length === 0 ? (
                   <tr>
                     <td
-                      colSpan={columns.length + (onBulkDelete ? 1 : 0) + (onEdit || onDelete ? 1 : 0)}
+                      colSpan={columns.length + (onBulkDelete || bulkActions ? 1 : 0) + (onEdit || onDelete ? 1 : 0)}
                       className="px-6 py-8 text-center text-gray-500 dark:text-gray-400"
                     >
                       No data found
@@ -142,7 +166,7 @@ export function DataTable<T extends { id: string }>({
                 ) : (
                   data.map((item) => (
                     <tr key={item.id} className="hover:bg-gray-50 dark:hover:bg-gray-800">
-                      {onBulkDelete && (
+                      {(onBulkDelete || bulkActions) && (
                         <td className="px-6 py-4">
                           <input
                             type="checkbox"

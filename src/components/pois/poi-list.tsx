@@ -1,12 +1,15 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { POI, CreatePOIInput, UpdatePOIInput } from '@/models';
+import { POI, CreatePOIInput, UpdatePOIInput, POIStatus, City, Category } from '@/models';
 import { poiService } from '@/services/poi-service';
-import { DataTable, Column } from '@/components/common/data-table';
+import { cityService } from '@/services/city-service';
+import { categoryService } from '@/services/category-service';
+import { DataTable, Column, BulkAction } from '@/components/common/data-table';
 import { Modal } from '@/components/common/modal';
 import { POIForm } from './poi-form';
 import { DocumentSnapshot, DocumentData } from 'firebase/firestore';
+import { FilterParams } from '@/repositories/base-repository';
 
 export function POIList() {
   const [pois, setPOIs] = useState<POI[]>([]);
@@ -18,6 +21,11 @@ export function POIList() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingPOI, setEditingPOI] = useState<POI | undefined>();
 
+  const [cities, setCities] = useState<City[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [selectedCityId, setSelectedCityId] = useState('');
+  const [selectedCategoryId, setSelectedCategoryId] = useState('');
+
   const loadPOIs = async (loadMore = false) => {
     try {
       if (loadMore) {
@@ -26,9 +34,19 @@ export function POIList() {
         setLoading(true);
       }
 
+      // Build filter parameters
+      const filters: FilterParams[] = [];
+      if (selectedCityId) {
+        filters.push({ field: 'cityId', value: selectedCityId });
+      }
+      if (selectedCategoryId) {
+        filters.push({ field: 'categoryId', value: selectedCategoryId });
+      }
+
       const result = await poiService.getPaginatedPOIs(
         { pageSize: 20, lastDoc: loadMore ? lastDoc : undefined },
-        searchQuery ? { field: 'name', value: searchQuery } : undefined
+        searchQuery ? { field: 'name', value: searchQuery } : undefined,
+        filters.length > 0 ? filters : undefined
       );
 
       if (loadMore) {
@@ -48,8 +66,24 @@ export function POIList() {
   };
 
   useEffect(() => {
+    const loadData = async () => {
+      try {
+        const [allCities, allCategories] = await Promise.all([
+          cityService.getAllCities(),
+          categoryService.getAllCategories(),
+        ]);
+        setCities(allCities);
+        setCategories(allCategories);
+      } catch (error) {
+        console.error('Error loading cities and categories:', error);
+      }
+    };
+    loadData();
+  }, []);
+
+  useEffect(() => {
     loadPOIs();
-  }, [searchQuery]);
+  }, [searchQuery, selectedCityId, selectedCategoryId]);
 
   const handleCreate = () => {
     setEditingPOI(undefined);
@@ -80,6 +114,46 @@ export function POIList() {
     await poiService.bulkDeletePOIs(ids);
     loadPOIs();
   };
+
+  const handleBulkUpdateStatus = async (ids: string[], status: POIStatus) => {
+    try {
+      await poiService.bulkUpdatePOIStatus(ids, status);
+      loadPOIs();
+    } catch (error) {
+      console.error('Error updating POI status:', error);
+      alert('Failed to update POI status');
+    }
+  };
+
+  const bulkActions: BulkAction[] = [
+    {
+      label: 'Set to NEW',
+      onClick: (ids) => {
+        if (confirm(`Set ${ids.length} POIs to NEW status?`)) {
+          handleBulkUpdateStatus(ids, POIStatus.NEW);
+        }
+      },
+      className: 'px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500',
+    },
+    {
+      label: 'Set to PUBLISHED',
+      onClick: (ids) => {
+        if (confirm(`Set ${ids.length} POIs to PUBLISHED status?`)) {
+          handleBulkUpdateStatus(ids, POIStatus.PUBLISHED);
+        }
+      },
+      className: 'px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500',
+    },
+    {
+      label: 'Set to DISABLED',
+      onClick: (ids) => {
+        if (confirm(`Set ${ids.length} POIs to DISABLED status?`)) {
+          handleBulkUpdateStatus(ids, POIStatus.DISABLED);
+        }
+      },
+      className: 'px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500',
+    },
+  ];
 
   const getStatusBadge = (status: string) => {
     const colors = {
@@ -134,6 +208,46 @@ export function POIList() {
         </button>
       </div>
 
+      <div className="flex gap-4 items-center">
+        <select
+          value={selectedCityId}
+          onChange={(e) => setSelectedCityId(e.target.value)}
+          className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+        >
+          <option value="">All Cities</option>
+          {cities.map((city) => (
+            <option key={city.id} value={city.id}>
+              {city.name}, {city.countryName}
+            </option>
+          ))}
+        </select>
+
+        <select
+          value={selectedCategoryId}
+          onChange={(e) => setSelectedCategoryId(e.target.value)}
+          className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+        >
+          <option value="">All Categories</option>
+          {categories.map((category) => (
+            <option key={category.id} value={category.id}>
+              {category.name}
+            </option>
+          ))}
+        </select>
+
+        {(selectedCityId || selectedCategoryId) && (
+          <button
+            onClick={() => {
+              setSelectedCityId('');
+              setSelectedCategoryId('');
+            }}
+            className="px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
+          >
+            Clear Filters
+          </button>
+        )}
+      </div>
+
       <DataTable
         data={pois}
         columns={columns}
@@ -141,6 +255,7 @@ export function POIList() {
         onEdit={handleEdit}
         onDelete={handleDelete}
         onBulkDelete={handleBulkDelete}
+        bulkActions={bulkActions}
         searchPlaceholder="Search POIs..."
         onSearch={setSearchQuery}
         onLoadMore={() => loadPOIs(true)}

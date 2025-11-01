@@ -1,5 +1,5 @@
 import { BaseRepository } from './base-repository';
-import { POI, CreatePOIInput, UpdatePOIInput } from '@/models';
+import { POI, CreatePOIInput, UpdatePOIInput, POIStatus } from '@/models';
 
 export class POIRepository extends BaseRepository<POI> {
   constructor() {
@@ -12,6 +12,10 @@ export class POIRepository extends BaseRepository<POI> {
 
   async updatePOI(id: string, data: UpdatePOIInput): Promise<void> {
     return this.update(id, data);
+  }
+
+  async bulkUpdateStatus(ids: string[], status: POIStatus): Promise<void> {
+    return this.bulkUpdate(ids, { status });
   }
 }
 

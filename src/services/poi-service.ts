@@ -1,6 +1,6 @@
 import { poiRepository } from '@/repositories/poi-repository';
-import { POI, CreatePOIInput, UpdatePOIInput } from '@/models';
-import { PaginationParams, SearchParams, PaginatedResult } from '@/repositories/base-repository';
+import { POI, CreatePOIInput, UpdatePOIInput, POIStatus } from '@/models';
+import { PaginationParams, SearchParams, PaginatedResult, FilterParams } from '@/repositories/base-repository';
 
 export class POIService {
   async getPOIById(id: string): Promise<POI | null> {
@@ -13,9 +13,10 @@ export class POIService {
 
   async getPaginatedPOIs(
     pagination: PaginationParams,
-    searchParams?: SearchParams
+    searchParams?: SearchParams,
+    filterParams?: FilterParams[]
   ): Promise<PaginatedResult<POI>> {
-    return poiRepository.getPaginated(pagination, searchParams);
+    return poiRepository.getPaginated(pagination, searchParams, filterParams);
   }
 
   async createPOI(data: CreatePOIInput): Promise<POI> {
@@ -75,6 +76,15 @@ export class POIService {
 
   async bulkDeletePOIs(ids: string[]): Promise<void> {
     return poiRepository.bulkDelete(ids);
+  }
+
+  async bulkUpdatePOIStatus(ids: string[], status: POIStatus): Promise<void> {
+    // Validate status
+    if (!Object.values(POIStatus).includes(status)) {
+      throw new Error('Invalid status value');
+    }
+
+    return poiRepository.bulkUpdateStatus(ids, status);
   }
 }
 
