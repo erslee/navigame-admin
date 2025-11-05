@@ -8,6 +8,7 @@ import { categoryService } from '@/services/category-service';
 import { DataTable, Column, BulkAction } from '@/components/common/data-table';
 import { Modal } from '@/components/common/modal';
 import { POIForm } from './poi-form';
+import { POIJsonImporter } from './poi-json-importer';
 import { DocumentSnapshot, DocumentData } from 'firebase/firestore';
 import { FilterParams } from '@/repositories/base-repository';
 
@@ -19,6 +20,7 @@ export function POIList() {
   const [lastDoc, setLastDoc] = useState<DocumentSnapshot<DocumentData>>();
   const [searchQuery, setSearchQuery] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [editingPOI, setEditingPOI] = useState<POI | undefined>();
 
   const [cities, setCities] = useState<City[]>([]);
@@ -88,6 +90,15 @@ export function POIList() {
   const handleCreate = () => {
     setEditingPOI(undefined);
     setIsModalOpen(true);
+  };
+
+  const handleImport = () => {
+    setIsImportModalOpen(true);
+  };
+
+  const handleImportSuccess = () => {
+    setIsImportModalOpen(false);
+    loadPOIs();
   };
 
   const handleEdit = (poi: POI) => {
@@ -200,12 +211,20 @@ export function POIList() {
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Points of Interest</h1>
-        <button
-          onClick={handleCreate}
-          className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-        >
-          Add POI
-        </button>
+        <div className="flex gap-3">
+          <button
+            onClick={handleImport}
+            className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500"
+          >
+            Import JSON
+          </button>
+          <button
+            onClick={handleCreate}
+            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            Add POI
+          </button>
+        </div>
       </div>
 
       <div className="flex gap-4 items-center">
@@ -272,6 +291,17 @@ export function POIList() {
           poi={editingPOI}
           onSubmit={handleSubmit}
           onCancel={() => setIsModalOpen(false)}
+        />
+      </Modal>
+
+      <Modal
+        isOpen={isImportModalOpen}
+        onClose={() => setIsImportModalOpen(false)}
+        title="Import POIs from JSON"
+      >
+        <POIJsonImporter
+          onSuccess={handleImportSuccess}
+          onCancel={() => setIsImportModalOpen(false)}
         />
       </Modal>
     </div>

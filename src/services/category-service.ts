@@ -33,6 +33,14 @@ export class CategoryService {
   async bulkDeleteCategories(ids: string[]): Promise<void> {
     return categoryRepository.bulkDelete(ids);
   }
+
+  async findCategoryByName(categoryName: string): Promise<Category | null> {
+    const allCategories = await this.getAllCategories();
+    const category = allCategories.find(
+      (c) => c.name.toLowerCase() === categoryName.toLowerCase()
+    );
+    return category || null;
+  }
 }
 
 export const categoryService = new CategoryService();

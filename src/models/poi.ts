@@ -49,3 +49,29 @@ export interface UpdatePOIInput {
   status?: POIStatus;
   dynamicFields?: Record<string, string>;
 }
+
+export interface POIJsonInput {
+  name: string;
+  categoryName: string;
+  cityName: string;
+  countryName: string;
+  address: string;
+  geolocation: Geolocation;
+  status: POIStatus;
+  dynamicFields?: Record<string, string>;
+}
+
+export interface POIImportValidationResult {
+  isValid: boolean;
+  poi: CreatePOIInput | null;
+  originalInput: POIJsonInput | null;
+  errors: string[];
+  index: number;
+}
+
+export interface POIImportResult {
+  total: number;
+  successful: number;
+  failed: number;
+  errors: Array<{ index: number; error: string }>;
+}

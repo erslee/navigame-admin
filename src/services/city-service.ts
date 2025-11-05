@@ -33,6 +33,15 @@ export class CityService {
   async bulkDeleteCities(ids: string[]): Promise<void> {
     return cityRepository.bulkDelete(ids);
   }
+
+  async findCityByNameAndCountry(cityName: string, countryName: string): Promise<City | null> {
+    const allCities = await this.getAllCities();
+    const city = allCities.find(
+      (c) => c.name.toLowerCase() === cityName.toLowerCase() &&
+             c.countryName.toLowerCase() === countryName.toLowerCase()
+    );
+    return city || null;
+  }
 }
 
 export const cityService = new CityService();
